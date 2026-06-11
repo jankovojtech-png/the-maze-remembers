@@ -5,22 +5,12 @@ export interface Position {
 
 export type GamePhase = 'playing' | 'paused';
 
+/** Kept for maze.ts return type — not stored in GameState. */
 export interface FlashCell {
   x: number;
   y: number;
   alpha: number;
   isWall: boolean;
-}
-
-export interface Particle {
-  x: number;
-  y: number;
-  vx: number;    // px/ms
-  vy: number;
-  alpha: number;
-  decay: number; // alpha/ms
-  r: number;
-  color: string;
 }
 
 export interface GameState {
@@ -30,20 +20,12 @@ export interface GameState {
   player: Position;
   playerDisplay: Position;
   exit: Position;
-  escapes: number;          // mazes completed this run
-  fogRadius: number;
+  escapes: number;
+  fogRadius: number;        // px
   phase: GamePhase;
   lastShiftTime: number;
-  flashCells: FlashCell[];
-  time: number;
-  visitedCells: Set<number>;
-  shakeOffset: { x: number; y: number };
-  shakeDuration: number;
-  shakeIntensity: number;
-  particles: Particle[];
-  lastExitParticle: number;
-  shiftInterval: number;    // ms between maze shifts
-  mutationCount: number;    // walls changed per shift
+  shiftInterval: number;    // ms
+  mutationCount: number;
   pausedAt: number;
-  totalPausedMs: number;
+  time: number;
 }

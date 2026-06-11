@@ -24,7 +24,7 @@ export function getDifficulty(escapes: number): Difficulty {
 
   return {
     gridSize,
-    fogCells:      Math.max(2.5, 4.5 - e * 0.07),
+    fogCells:      Math.max(2.0, 3.0 - e * 0.033),  // 3.0 → 2.0 over 30 escapes
     shiftInterval: Math.max(7000, 14000 - e * 250),
     mutationCount: Math.min(6, 2 + Math.floor(e / 5)),
   };

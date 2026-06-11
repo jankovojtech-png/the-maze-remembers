@@ -1,0 +1,60 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  /* Use dynamic viewport height to handle mobile browser chrome */
+  height: 100dvh;
+  overflow: hidden;
+  background: #070b0f;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+button:active {
+  opacity: 0.68;
+  transform: scale(0.95);
+}
+
+/* ─── Safe area utilities (for notches + home indicators) ──────────────────── */
+
+/* HUD — push down from notch */
+.safe-hud {
+  padding-top: max(8px, env(safe-area-inset-top, 0px)) !important;
+  padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+}
+
+/* D-pad — lift above home indicator */
+.safe-dpad {
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 12px)) !important;
+}
+
+/* Hint — lift above home indicator on the right */
+.safe-hint {
+  bottom: max(36px, calc(env(safe-area-inset-bottom, 0px) + 14px)) !important;
+  right: max(18px, env(safe-area-inset-right, 0px)) !important;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes warnPulse {
+  0%, 100% { opacity: 0.45; letter-spacing: 0.22em; }
+  50%       { opacity: 1;    letter-spacing: 0.30em; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}

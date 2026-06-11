@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" fill="#070b0f" rx="96"/>
+
+  <!-- Maze walls (simplified 3×3 grid) -->
+  <!-- Outer border -->
+  <rect x="56" y="56" width="400" height="400" fill="none" stroke="#1e3252" stroke-width="22" rx="6"/>
+  <!-- Horizontal internal walls -->
+  <line x1="56"  y1="189" x2="245" y2="189" stroke="#1e3252" stroke-width="16"/>
+  <line x1="312" y1="189" x2="456" y2="189" stroke="#1e3252" stroke-width="16"/>
+  <line x1="56"  y1="323" x2="200" y2="323" stroke="#1e3252" stroke-width="16"/>
+  <line x1="267" y1="323" x2="456" y2="323" stroke="#1e3252" stroke-width="16"/>
+  <!-- Vertical internal walls -->
+  <line x1="189" y1="56"  x2="189" y2="245" stroke="#1e3252" stroke-width="16"/>
+  <line x1="189" y1="310" x2="189" y2="456" stroke="#1e3252" stroke-width="16"/>
+  <line x1="323" y1="56"  x2="323" y2="145" stroke="#1e3252" stroke-width="16"/>
+  <line x1="323" y1="245" x2="323" y2="456" stroke="#1e3252" stroke-width="16"/>
+
+  <!-- Player glow (top-left cell) -->
+  <circle cx="123" cy="123" r="46" fill="rgba(90,180,255,0.22)"/>
+  <circle cx="123" cy="123" r="22" fill="#5ab4ff"/>
+  <!-- Specular -->
+  <circle cx="113" cy="112" r="8" fill="rgba(255,255,255,0.6)"/>
+
+  <!-- Exit glow (bottom-right cell) -->
+  <circle cx="389" cy="389" r="40" fill="rgba(0,255,136,0.2)"/>
+  <circle cx="389" cy="389" r="18" fill="#00ff88"/>
+</svg>

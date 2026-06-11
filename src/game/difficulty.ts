@@ -1,36 +1,45 @@
 /**
- * Pure difficulty curve — no level configs, no objectives, no keys.
- * Difficulty scales continuously with escape count.
+ * Difficulty curve — scales with escape count.
+ *
+ * Steepness target: noticeably harder by escape 5–8.
+ *
+ * escape  0 → 11×11,  3.0 fog cells, 13s shifts, 2 mutations
+ * escape  5 → 21×21,  2.6 fog cells,  9s shifts, 3 mutations
+ * escape  8 → 25×25,  2.4 fog cells,  8s shifts, 4 mutations
+ * escape 15 → 31×31,  1.9 fog cells,  6s shifts, 7 mutations
+ * escape 20 → 35×35,  1.8 fog cells,  5s shifts, 9 mutations  (plateau)
  */
 export interface Difficulty {
   gridSize: number;       // always odd
-  fogCells: number;       // fog radius in cells
+  fogCells: number;       // visibility radius in cells
   shiftInterval: number;  // ms between maze shifts
-  mutationCount: number;  // walls changed per shift
+  mutationCount: number;  // walls toggled per shift
+  loopChance: number;     // fraction of interior walls punched to form loops
 }
 
-/**
- * Difficulty ramps smoothly over ~30 escapes then plateaus.
- *
- * escape  0 → 11×11 grid, 4.5 fog cells, 14s shifts, 2 mutations
- * escape 30 → 29×29 grid, 2.5 fog cells,  7s shifts, 6 mutations
- */
 export function getDifficulty(escapes: number): Difficulty {
-  const e = Math.min(escapes, 30);
+  const e = Math.min(escapes, 20); // plateau after 20
 
-  // Grid size: 11 → 29 in steps of 2, one step every 3 escapes
-  const rawSize = 11 + Math.floor(e / 3) * 2;
-  const gridSize = Math.min(29, rawSize % 2 === 0 ? rawSize + 1 : rawSize);
+  // Grid: grows by 2 every 2 escapes  →  11 at 0, 21 at 5, 31 at 10, cap 35
+  const rawSize = 11 + Math.floor(e / 2) * 2;
+  const gridSize = Math.min(35, rawSize % 2 === 0 ? rawSize + 1 : rawSize);
 
-  return {
-    gridSize,
-    fogCells:      Math.max(2.0, 3.0 - e * 0.033),  // 3.0 → 2.0 over 30 escapes
-    shiftInterval: Math.max(7000, 14000 - e * 250),
-    mutationCount: Math.min(6, 2 + Math.floor(e / 5)),
-  };
+  // Fog: 3.0 → 1.8 over 20 escapes  (−0.06/escape)
+  const fogCells = Math.max(1.8, 3.0 - e * 0.06);
+
+  // Shifts: 13 000 → 5 000 ms  (−400ms/escape)
+  const shiftInterval = Math.max(5000, 13000 - e * 400);
+
+  // Mutations: 2 → 10  (+1 every 2 escapes)
+  const mutationCount = Math.min(10, 2 + Math.floor(e / 2));
+
+  // Loops: slight extra loops at higher difficulty make navigation trickier
+  const loopChance = Math.min(0.09, 0.045 + e * 0.002);
+
+  return { gridSize, fogCells, shiftInterval, mutationCount, loopChance };
 }
 
-// ─── Persistent score ────────────────────────────────────────────────────────
+// ─── Persistent score ─────────────────────────────────────────────────────────
 const LS_KEY = 'maze_v2_best_escapes';
 
 export function getBestEscapes(): number {

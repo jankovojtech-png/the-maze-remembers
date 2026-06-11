@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { generateMaze, mutateMaze } from '../game/maze';
+import { generateMaze, mutateMaze, findDynamicExit } from '../game/maze';
 import { getDifficulty, getBestEscapes, saveBestEscapes } from '../game/difficulty';
 import type { GamePhase, GameState } from '../game/types';
 
@@ -22,12 +22,14 @@ const clamp = (lo: number, hi: number, v: number) => Math.max(lo, Math.min(hi, v
 
 // ─── Build maze state ─────────────────────────────────────────────────────────
 function buildMaze(escapes: number, now: number): GameState {
-  const diff = getDifficulty(escapes);
-  const maze = generateMaze(diff.gridSize);
+  const diff   = getDifficulty(escapes);
+  const maze   = generateMaze(diff.gridSize, diff.loopChance);
   const w = diff.gridSize, h = diff.gridSize;
   const player = { x: 1, y: 1 };
-  const exit   = { x: w - 2, y: h - 2 };
-  maze[exit.y][exit.x] = false;
+
+  // Place exit at a BFS-far floor cell — never the same corner every run
+  const exit = findDynamicExit(maze, player, w, h);
+  maze[exit.y][exit.x] = false; // ensure it's passable
   return {
     maze, gridW: w, gridH: h,
     player: { ...player }, playerDisplay: { ...player },

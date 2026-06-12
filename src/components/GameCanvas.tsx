@@ -71,10 +71,17 @@ export default function GameCanvas({ onBackToMenu }: Props) {
   // ── Resize ────────────────────────────────────────────────────────────────
   const resize = useCallback(() => {
     const c = canvasRef.current; if (!c) return;
-    c.width  = window.innerWidth;
-    c.height = window.innerHeight;
-    fogRef.current.width  = c.width;
-    fogRef.current.height = c.height;
+    // Read the canvas's actual CSS pixel size.
+    // On iOS Safari the address bar changes window.innerHeight but the
+    // position:fixed container stays at the layout-viewport height.
+    // clientWidth/clientHeight (from CSS) are always consistent with what
+    // is rendered on screen, so W/H inside render() match exactly.
+    const W = c.clientWidth  || window.innerWidth;
+    const H = c.clientHeight || window.innerHeight;
+    c.width  = W;
+    c.height = H;
+    fogRef.current.width  = W;
+    fogRef.current.height = H;
   }, []);
 
   // ── Move one step ─────────────────────────────────────────────────────────
@@ -176,17 +183,24 @@ export default function GameCanvas({ onBackToMenu }: Props) {
     const ctx = canvas.getContext('2d')!;
     const W = canvas.width, H = canvas.height;
 
-    // Player always appears centered in the non-HUD area
+    // Ideal screen center for the player (below the HUD bar)
     const FX = W / 2;
     const FY = H / 2 + HUD_H / 2;
 
-    // Camera: clamp to maze bounds
+    // Camera: try to keep player at FX,FY; clamp so maze never scrolls past its edges
     const mazeW = s.gridW * CS, mazeH = s.gridH * CS;
     const camX = mazeW > W ? clamp(W - mazeW, 0, FX - (s.playerDisplay.x + .5) * CS)
                            : FX - (s.playerDisplay.x + .5) * CS;
     const camY = mazeH > H ? clamp(H - mazeH, 0, FY - (s.playerDisplay.y + .5) * CS)
                            : FY - (s.playerDisplay.y + .5) * CS;
     cameraRef.current = { x: camX, y: camY };
+
+    // Actual screen position of the player after camera clamping.
+    // This is what must be used for the fog circle — NOT the fixed FX/FY,
+    // because when the camera clamps (small maze, near edges, small screen)
+    // the player no longer sits at FX/FY.
+    const playerSX = (s.playerDisplay.x + 0.5) * CS + camX;
+    const playerSY = (s.playerDisplay.y + 0.5) * CS + camY;
 
     // ── Black canvas ─────────────────────────────────────────────────────
     ctx.fillStyle = BG;
@@ -244,17 +258,19 @@ export default function GameCanvas({ onBackToMenu }: Props) {
     fctx.fillStyle = '#000';
     fctx.fillRect(0, 0, W, H);
 
-    // Punch a near-hard circle hole centered on the player
+    // Punch a near-hard circle hole centered on the player's ACTUAL screen position.
+    // Must use playerSX/playerSY (post-clamp), not FX/FY (which only equals the
+    // player position when the camera is unclamped).
     fctx.globalCompositeOperation = 'destination-out';
     const fogR  = s.fogRadius;
     const softW = Math.max(3, fogR * 0.05); // ≤5% soft edge — hard flashlight
     const innerStop = (fogR - softW) / fogR;
-    const fog = fctx.createRadialGradient(FX, FY, 0, FX, FY, fogR);
-    fog.addColorStop(0,         'rgba(0,0,0,1)'); // center — fully transparent fog
+    const fog = fctx.createRadialGradient(playerSX, playerSY, 0, playerSX, playerSY, fogR);
+    fog.addColorStop(0,         'rgba(0,0,0,1)'); // center — fully transparent
     fog.addColorStop(innerStop, 'rgba(0,0,0,1)'); // up to edge — still clear
-    fog.addColorStop(1,         'rgba(0,0,0,0)'); // edge — fog fully opaque
+    fog.addColorStop(1,         'rgba(0,0,0,0)'); // edge — fog opaque
     fctx.fillStyle = fog;
-    fctx.beginPath(); fctx.arc(FX, FY, fogR, 0, Math.PI * 2); fctx.fill();
+    fctx.beginPath(); fctx.arc(playerSX, playerSY, fogR, 0, Math.PI * 2); fctx.fill();
     fctx.globalCompositeOperation = 'source-over';
 
     ctx.drawImage(fc, 0, 0);
@@ -366,7 +382,10 @@ export default function GameCanvas({ onBackToMenu }: Props) {
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
     <div style={{ position: 'fixed', inset: 0, background: BG, overflow: 'hidden' }}>
-      <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none' }} />
+      <canvas
+        ref={canvasRef}
+        style={{ display: 'block', width: '100%', height: '100%', touchAction: 'none' }}
+      />
 
       {/* HUD */}
       <div className="safe-hud" style={S.hud}>
